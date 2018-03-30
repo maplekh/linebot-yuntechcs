@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="538374d9-dca0-4409-8ff0-f081b0b7244e" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/conf/config.php" afterPath="$PROJECT_DIR$/app/conf/config.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/core/include/autoLoader.php" afterPath="$PROJECT_DIR$/core/include/autoLoader.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/core/lib/Mvc/App.php" afterPath="$PROJECT_DIR$/core/lib/Mvc/App.php" />
-    </list>
+    <list default="true" id="538374d9-dca0-4409-8ff0-f081b0b7244e" name="Default" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -222,12 +218,12 @@
       <option name="presentableId" value="Default" />
       <updated>1522375294565</updated>
       <workItem from="1522375295968" duration="7209000" />
-      <workItem from="1522389321705" duration="857000" />
+      <workItem from="1522389321705" duration="934000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="8066000" />
+    <option name="totallyTimeSpent" value="8143000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1874" height="1096" extended-state="6" />
