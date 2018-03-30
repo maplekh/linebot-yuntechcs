@@ -18,28 +18,28 @@ $config->autoloadNamespace = array(
 $config->db = array(
     'master' => array(
         'adapter' => 'mysql',
-        'dbname' => 'hikaru',
+        'dbname' => 'maple',
         'host' => '127.0.0.1',
         'port' => '3306',
         'username' => 'root',
-        'password' => 'qeksnopre'
+        'password' => ''
     ),
     'slave' => array(
         array(
             'adapter' => 'mysql',
-            'dbname' => 'hikaru',
+            'dbname' => 'maple',
             'host' => '127.0.0.1',
             'port' => '3306',
             'username' => 'root',
-            'password' => 'qeksnopre'
+            'password' => ''
         ),
         array(
             'adapter' => 'mysql',
-            'dbname' => 'hikaru',
+            'dbname' => 'maples',
             'host' => '127.0.0.1',
             'port' => '3306',
             'username' => 'root',
-            'password' => 'qeksnopre'
+            'password' => ''
         ),
     )
 );
@@ -54,26 +54,26 @@ $config->ACL = array(
         array('Error', '*'),
     ),
 );
-$config->middlewareGroup = array(
-    'Cors',
-    'M1',
-    'M2',
-);
-$config->middlewareGroup2 = array(
-    'Cors',
-    'M1',
-    'M4',
-    'M2',
-);
-$config->middlewareBind = array(
-    '*' => 'M4',
-    'Index' => array(
-        '*' => $config->middlewareGroup,
-        'update' => 'M3',
-    ),
-    'Member' => array(
-        '*' => $config->middlewareGroup2,
-        'needLogin' => 'M1',
-    )
-);
+//$config->middlewareGroup = array(
+//    'Cors',
+//    'M1',
+//    'M2',
+//);
+//$config->middlewareGroup2 = array(
+//    'Cors',
+//    'M1',
+//    'M4',
+//    'M2',
+//);
+//$config->middlewareBind = array(
+//    '*' => 'M4',
+//    'Index' => array(
+//        '*' => $config->middlewareGroup,
+//        'update' => 'M3',
+//    ),
+//    'Member' => array(
+//        '*' => $config->middlewareGroup2,
+//        'needLogin' => 'M1',
+//    )
+//);
 return $config;

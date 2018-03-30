@@ -53,7 +53,6 @@ class App
                 $controllerObject = new $controllerClass();
             }
         }
-
         /**
          * Gen MVC structure
          */
