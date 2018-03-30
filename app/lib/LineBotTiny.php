@@ -6,7 +6,7 @@
  * Time: 下午 03:39
  */
 
-namespace Conpoz\Core\Lib\Util;
+namespace Conpoz\App\Lib;
 
 if (!function_exists('hash_equals')) {
     defined('USE_MB_STRING') or define('USE_MB_STRING', function_exists('mb_strlen'));
@@ -36,7 +36,7 @@ if (!function_exists('hash_equals')) {
     }
 }
 
-class LINEBotTiny
+class LineBotTiny
 {
     public function __construct($channelAccessToken, $channelSecret)
     {
@@ -46,6 +46,7 @@ class LINEBotTiny
 
     public function parseEvents()
     {
+        var_dump(123);
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             error_log("Method not allowed");
@@ -84,7 +85,7 @@ class LINEBotTiny
             "Content-Type: application/json",
             'Authorization: Bearer ' . $this->channelAccessToken,
         );
-
+        var_dump(123);
         $context = stream_context_create(array(
             "http" => array(
                 "method" => "POST",
@@ -92,7 +93,7 @@ class LINEBotTiny
                 "content" => json_encode($message),
             ),
         ));
-
+        var_dump(123);
         $response = file_get_contents('https://api.line.me/v2/bot/message/reply', false, $context);
         if (strpos($http_response_header[0], '200') === false) {
             #http_response_code(500);
