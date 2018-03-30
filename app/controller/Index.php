@@ -5,7 +5,44 @@ class Index extends \Conpoz\App\Controller\BaseController
 {
     public function indexAction ($bag)
     {
-        echo 'hello world';
+//        echo 'hello world';
+        $channelAccessToken = '2UIe0hDI6sidbGdb1iI/k4wdgSArOm6T3/YKQqlgX1EyzSA5L5/HZiHsk9MHqDOsr7ETARt5Sd88xKf/PeG91HvsY5eB6+5JbOrejlH5QN9zdivLmT4OVWFy5XnWScnjSXc1CfvDZJWX0wlm6QmeAAdB04t89/1O/w1cDnyilFU=';
+        $channelSecret = '57f630cd8fb7e71a8364bfcba3853118';
+
+
+        $client = $bag->linebot;
+        foreach ($client->parseEvents() as $event) {
+            switch ($event['type']) {
+                case 'message':
+                    $message = $event['message'];
+                    switch ($message['type']) {
+                        case 'text':
+                            $m_message = $message['text'];
+                            if ($m_message != "") {
+
+//                                $oDBConnector = new DBConnector();
+//                                $aData = $oDBConnector->cmdSelector($m_message);
+
+                                $client->replyMessage(array(
+                                    'replyToken' => $event['replyToken'],
+                                    'messages' => array(
+                                        array(
+                                            'type' => 'text',
+                                            'text' => json_encode($event)
+                                        )
+                                    )
+                                ));
+                            }
+                            break;
+
+                    }
+                    break;
+                default:
+                    error_log("Unsupporeted event type: " . $event['type']);
+                    break;
+            }
+        };
+
     }
 
     public function uploadAction () 

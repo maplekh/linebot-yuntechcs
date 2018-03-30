@@ -60,4 +60,8 @@ $bag->validator = function () {
     return new \Conpoz\Core\Lib\Util\Validator();
 };
 
+$bag->linebot = function () use ($config) {
+    return new \Conpoz\Core\Lib\Util\LINEBotTiny($config->linebot['channelAccessToken'], $config->linebot['channelSecret']);
+};
+
 return $bag;

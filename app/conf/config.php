@@ -54,6 +54,10 @@ $config->ACL = array(
         array('Error', '*'),
     ),
 );
+$config->linebot = array(
+    'channelAccessToken' => '2UIe0hDI6sidbGdb1iI/k4wdgSArOm6T3/YKQqlgX1EyzSA5L5/HZiHsk9MHqDOsr7ETARt5Sd88xKf/PeG91HvsY5eB6+5JbOrejlH5QN9zdivLmT4OVWFy5XnWScnjSXc1CfvDZJWX0wlm6QmeAAdB04t89/1O/w1cDnyilFU=',
+    'channelSecret' => '57f630cd8fb7e71a8364bfcba3853118'
+);
 //$config->middlewareGroup = array(
 //    'Cors',
 //    'M1',
