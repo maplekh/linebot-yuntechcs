@@ -1,7 +1,7 @@
 <?php
 /**
  * @package     SimpleImage class
- * @version     2.6.0
+ * @version     2.7.0
  * @author      Cory LaViska for A Beautiful Site, LLC (http://www.abeautifulsite.net/)
  * @author      Nazar Mokrynskyi <nazar@mokrynskyi.com> - merging of forks, namespace support, PhpDoc editing, adaptive_resize() method, other fixes
  * @license     This software is licensed under the MIT license: http://opensource.org/licenses/MIT
@@ -26,7 +26,7 @@ class SimpleImage {
      */
     public $quality = 80;
 
-    protected $image, $filename, $original_info, $width, $height, $imagestring;
+    protected $image, $filename, $original_info, $width, $height, $imagestring, $mimetype;
 
     /**
      * Create instance and load an image, or create an image from scratch
@@ -43,25 +43,15 @@ class SimpleImage {
      *
      */
     function __construct($filename = null, $width = null, $height = null, $color = null) {
+        // Ignore JPEG warnings that cause imagecreatefromjpeg() to fail
+        ini_set('gd.jpeg_ignore_warning', 1);
+
         if ($filename) {
             $this->load($filename);
         } elseif ($width) {
             $this->create($width, $height, $color);
         }
         return $this;
-    }
-
-    function __call($name, $arguments)
-    {
-        preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $name, $matches);
-        $ret = $matches[0];
-        foreach ($ret as &$match) {
-        $match = $match == strtoupper($match) ? strtolower($match) : lcfirst($match);
-        }
-        $methodName = implode('_', $ret);
-        if (method_exists($this, $methodName)) {
-            return call_user_func_array(array($this, $methodName), $arguments);
-        }
     }
 
     /**
@@ -204,6 +194,32 @@ class SimpleImage {
         for ($i = 0; $i < $passes; $i++) {
             imagefilter($this->image, $type);
         }
+        return $this;
+    }
+
+    /**
+     * Border
+     *
+     * @param float|int     $width      Border width in pixels. Default 1
+     *
+     * @param string        $color      Hex color string, array(red, green, blue) or array(red, green, blue, alpha).
+     *                                  Where red, green, blue - integers 0-255, alpha - integer 0-127. Default #000
+     *
+     * @return SimpleImage
+     *
+     */
+    function border($width = 1, $color = '#000') {
+        $x1 = 0;
+        $y1 = 0;
+        $x2 = $this->width - 1;
+        $y2 = $this->height - 1;
+        $color = $this->normalize_color($color);
+        $color = imagecolorallocatealpha($this->image, $color['r'], $color['g'], $color['b'], 0);
+
+        for($i = 0; $i < $width; $i++) {
+            imagerectangle($this->image, $x1++, $y1++, $x2--, $y2--, $color);
+        }
+
         return $this;
     }
 
@@ -466,6 +482,13 @@ class SimpleImage {
     }
 
     /**
+     * Generates an image
+     *
+     * @return int
+     *
+     */
+
+    /**
      * Get the current height
      *
      * @return int
@@ -612,7 +635,7 @@ class SimpleImage {
     }
 
     /**
-     * Outputs image without saving
+     * Generates the image as a string it and sets mime type
      *
      * @param null|string   $format     If omitted or null - format of original file will be used, may be gif|jpg|png
      * @param int|null      $quality    Output image quality in percents 0-100
@@ -620,7 +643,7 @@ class SimpleImage {
      * @throws Exception
      *
      */
-    function output($format = null, $quality = null) {
+    protected function generate($format = null, $quality = null) {
 
         // Determine quality
         $quality = $quality ?: $this->quality;
@@ -645,60 +668,7 @@ class SimpleImage {
                 break;
         }
 
-        // Output the image
-        header('Content-Type: '.$mimetype);
-        switch ($mimetype) {
-            case 'image/gif':
-                imagegif($this->image);
-                break;
-            case 'image/jpeg':
-                imagejpeg($this->image, null, round($quality));
-                break;
-            case 'image/png':
-                imagepng($this->image, null, round(9 * $quality / 100));
-                break;
-            default:
-                throw new Exception('Unsupported image format: '.$this->filename);
-                break;
-        }
-    }
-
-    /**
-     * Outputs image as data base64 to use as img src
-     *
-     * @param null|string   $format     If omitted or null - format of original file will be used, may be gif|jpg|png
-     * @param int|null      $quality    Output image quality in percents 0-100
-     *
-     * @return string
-     * @throws Exception
-     *
-     */
-    function output_base64($format = null, $quality = null) {
-
-        // Determine quality
-        $quality = $quality ?: $this->quality;
-
-        // Determine mimetype
-        switch (strtolower($format)) {
-            case 'gif':
-                $mimetype = 'image/gif';
-                break;
-            case 'jpeg':
-            case 'jpg':
-                imageinterlace($this->image, true);
-                $mimetype = 'image/jpeg';
-                break;
-            case 'png':
-                $mimetype = 'image/png';
-                break;
-            default:
-                $info = getimagesize($this->filename);
-                $mimetype = $info['mime'];
-                unset($info);
-                break;
-        }
-
-        // Output the image
+        // Sets the image data
         ob_start();
         switch ($mimetype) {
             case 'image/gif':
@@ -714,11 +684,46 @@ class SimpleImage {
                 throw new Exception('Unsupported image format: '.$this->filename);
                 break;
         }
-        $image_data = ob_get_contents();
+        $imagestring = ob_get_contents();
         ob_end_clean();
 
+        return array($mimetype, $imagestring);
+    }
+
+    /**
+     * Outputs image without saving
+     *
+     * @param null|string   $format     If omitted or null - format of original file will be used, may be gif|jpg|png
+     * @param int|null      $quality    Output image quality in percents 0-100
+     *
+     * @throws Exception
+     *
+     */
+    function output($format = null, $quality = null) {
+
+        list( $mimetype, $imagestring ) = $this->generate( $format, $quality );
+
+        // Output the image
+        header('Content-Type: '.$mimetype);
+        echo $imagestring;
+    }
+
+    /**
+     * Outputs image as data base64 to use as img src
+     *
+     * @param null|string   $format     If omitted or null - format of original file will be used, may be gif|jpg|png
+     * @param int|null      $quality    Output image quality in percents 0-100
+     *
+     * @return string
+     * @throws Exception
+     *
+     */
+    function output_base64($format = null, $quality = null) {
+
+        list( $mimetype, $imagestring ) = $this->generate( $format, $quality );
+
         // Returns formatted string for img src
-        return 'data:'.$mimetype.';base64,'.base64_encode($image_data);
+        return "data:{$mimetype};base64,".base64_encode($imagestring);
 
     }
 
@@ -893,32 +898,16 @@ class SimpleImage {
     function save($filename = null, $quality = null, $format = null) {
 
         // Determine quality, filename, and format
-        $quality = $quality ?: $this->quality;
         $filename = $filename ?: $this->filename;
-        if( !$format ) {
+        if( !$format )
             $format = $this->file_ext($filename) ?: $this->original_info['format'];
-        }
 
-        // Create the image
-        switch (strtolower($format)) {
-            case 'gif':
-                $result = imagegif($this->image, $filename);
-                break;
-            case 'jpg':
-            case 'jpeg':
-                imageinterlace($this->image, true);
-                $result = imagejpeg($this->image, $filename, round($quality));
-                break;
-            case 'png':
-                $result = imagepng($this->image, $filename, round(9 * $quality / 100));
-                break;
-            default:
-                throw new Exception('Unsupported format');
-        }
+        list( $mimetype, $imagestring ) = $this->generate( $format, $quality );
 
-        if (!$result) {
+        // Save the image
+        $result = file_put_contents( $filename, $imagestring );
+        if (!$result)
             throw new Exception('Unable to save image: ' . $filename);
-        }
 
         return $this;
 
@@ -1150,11 +1139,12 @@ class SimpleImage {
      *
      * @param int           $width
      * @param int|null      $height If omitted - assumed equal to $width
+     * @param string        $focal
      *
      * @return SimpleImage
      *
      */
-    function thumbnail($width, $height = null) {
+    public function thumbnail($width, $height = null, $focal = 'center') {
 
         // Determine height
         $height = $height ?: $width;
@@ -1169,12 +1159,67 @@ class SimpleImage {
         } else {
             $this->fit_to_width($width);
         }
-        $left = floor(($this->width / 2) - ($width / 2));
-        $top = floor(($this->height / 2) - ($height / 2));
+
+        switch(strtolower($focal)) {
+            case 'top':
+                $left = floor(($this->width / 2) - ($width / 2));
+                $right = $width + $left;
+                $top = 0;
+                $bottom = $height;
+                break;
+            case 'bottom':
+                $left = floor(($this->width / 2) - ($width / 2));
+                $right = $width + $left;
+                $top = $this->height - $height;
+                $bottom = $this->height;
+                break;
+            case 'left':
+                $left = 0;
+                $right = $width;
+                $top = floor(($this->height / 2) - ($height / 2));
+                $bottom = $height + $top;
+                break;
+            case 'right':
+                $left = $this->width - $width;
+                $right = $this->width;
+                $top = floor(($this->height / 2) - ($height / 2));
+                $bottom = $height + $top;
+                break;
+            case 'top left':
+                $left = 0;
+                $right = $width;
+                $top = 0;
+                $bottom = $height;
+                break;
+            case 'top right':
+                $left = $this->width - $width;
+                $right = $this->width;
+                $top = 0;
+                $bottom = $height;
+                break;
+            case 'bottom left':
+                $left = 0;
+                $right = $width;
+                $top = $this->height - $height;
+                $bottom = $this->height;
+                break;
+            case 'bottom right':
+                $left = $this->width - $width;
+                $right = $this->width;
+                $top = $this->height - $height;
+                $bottom = $this->height;
+                break;
+            case 'center':
+            default:
+                $left = floor(($this->width / 2) - ($width / 2));
+                $right = $width + $left;
+                $top = floor(($this->height / 2) - ($height / 2));
+                $bottom = $height + $top;
+                break;
+        }
 
         // Return trimmed image
-        return $this->crop($left, $top, $width + $left, $height + $top);
-
+        return $this->crop($left, $top, $right, $bottom);
     }
 
     /**
@@ -1219,9 +1264,10 @@ class SimpleImage {
                 case 'image/png':
                     $this->image = imagecreatefrompng($this->filename);
                     break;
-                default:
-                    throw new Exception('Invalid image: '.$this->filename);
-                    break;
+            }
+
+            if(!$this->image) {
+              throw new Exception('Invalid or corrupt image: ' . $this->filename);
             }
         } elseif (function_exists('getimagesizefromstring')) {
             $info = getimagesizefromstring($this->imagestring);
@@ -1264,53 +1310,63 @@ class SimpleImage {
      *
      */
     protected function imagecopymerge_alpha($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct) {
+        // Merge truecolor images
+        if(imageistruecolor($dst_im) && imageistruecolor($src_im)) {
+            // Get image width and height and percentage
+            $pct /= 100;
+            $w = imagesx($src_im);
+            $h = imagesy($src_im);
 
-        // Get image width and height and percentage
-        $pct /= 100;
-        $w = imagesx($src_im);
-        $h = imagesy($src_im);
+            // Turn alpha blending off
+            imagealphablending($src_im, false);
 
-        // Turn alpha blending off
-        imagealphablending($src_im, false);
-
-        // Find the most opaque pixel in the image (the one with the smallest alpha value)
-        $minalpha = 127;
-        for ($x = 0; $x < $w; $x++) {
-            for ($y = 0; $y < $h; $y++) {
-                $alpha = (imagecolorat($src_im, $x, $y) >> 24) & 0xFF;
-                if ($alpha < $minalpha) {
-                    $minalpha = $alpha;
+            // Find the most opaque pixel in the image (the one with the smallest alpha value)
+            $minalpha = 127;
+            for ($x = 0; $x < $w; $x++) {
+                for ($y = 0; $y < $h; $y++) {
+                    $alpha = (imagecolorat($src_im, $x, $y) >> 24) & 0xFF;
+                    if ($alpha < $minalpha) {
+                        $minalpha = $alpha;
+                    }
                 }
             }
-        }
 
-        // Loop through image pixels and modify alpha for each
-        for ($x = 0; $x < $w; $x++) {
-            for ($y = 0; $y < $h; $y++) {
-                // Get current alpha value (represents the TANSPARENCY!)
-                $colorxy = imagecolorat($src_im, $x, $y);
-                $alpha = ($colorxy >> 24) & 0xFF;
-                // Calculate new alpha
-                if ($minalpha !== 127) {
-                    $alpha = 127 + 127 * $pct * ($alpha - 127) / (127 - $minalpha);
-                } else {
-                    $alpha += 127 * $pct;
-                }
-                // Get the color index with new alpha
-                $alphacolorxy = imagecolorallocatealpha($src_im, ($colorxy >> 16) & 0xFF, ($colorxy >> 8) & 0xFF, $colorxy & 0xFF, $alpha);
-                // Set pixel with the new color + opacity
-                if (!imagesetpixel($src_im, $x, $y, $alphacolorxy)) {
-                    return;
+            // Loop through image pixels and modify alpha for each
+            for ($x = 0; $x < $w; $x++) {
+                for ($y = 0; $y < $h; $y++) {
+                    // Get current alpha value (represents the TANSPARENCY!)
+                    $colorxy = imagecolorat($src_im, $x, $y);
+                    $alpha = ($colorxy >> 24) & 0xFF;
+                    // Calculate new alpha
+                    if ($minalpha !== 127) {
+                        $alpha = 127 + 127 * $pct * ($alpha - 127) / (127 - $minalpha);
+                    } else {
+                        $alpha += 127 * $pct;
+                    }
+                    // Get the color index with new alpha
+                    $alphacolorxy = imagecolorallocatealpha($src_im, ($colorxy >> 16) & 0xFF, ($colorxy >> 8) & 0xFF, $colorxy & 0xFF, $alpha);
+                    // Set pixel with the new color + opacity
+                    if (!imagesetpixel($src_im, $x, $y, $alphacolorxy)) {
+                        return;
+                    }
                 }
             }
-        }
 
-        // Copy it
-        imagesavealpha($dst_im, true);
-        imagealphablending($dst_im, true);
-        imagesavealpha($src_im, true);
-        imagealphablending($src_im, true);
-        imagecopy($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h);
+            // Copy it
+            imagesavealpha($dst_im, true);
+            imagealphablending($dst_im, true);
+            imagesavealpha($src_im, true);
+            imagealphablending($src_im, true);
+            imagecopy($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h);
+        } else {
+            // If either image is not truecolor, fallback to standard version
+            if($pct === 100) {
+                // imagecopy handles antialiasing better at 100%
+                imagecopy($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h);
+            } else {
+                imagecopymerge($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct);
+            }
+        }
 
     }
 

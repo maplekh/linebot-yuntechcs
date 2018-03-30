@@ -4,21 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "d537bfd39bc1386e3737cce6c19b4558",
-    "content-hash": "a545aa9ebeaeded387c0a5e6f0f5b980",
+    "content-hash": "a04c393f19b95cff73e0c519a8d5d914",
     "packages": [
         {
             "name": "abeautifulsite/simpleimage",
-            "version": "2.6.0",
+            "version": "2.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/claviska/SimpleImage.git",
-                "reference": "a8fb6f68d12f32e3394a2784c3a8c500bc24cdec"
+                "reference": "54a99d302355d22ee00d9842a8dbe101a52203d8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/claviska/SimpleImage/zipball/a8fb6f68d12f32e3394a2784c3a8c500bc24cdec",
-                "reference": "a8fb6f68d12f32e3394a2784c3a8c500bc24cdec",
+                "url": "https://api.github.com/repos/claviska/SimpleImage/zipball/54a99d302355d22ee00d9842a8dbe101a52203d8",
+                "reference": "54a99d302355d22ee00d9842a8dbe101a52203d8",
                 "shasum": ""
             },
             "require": {
@@ -54,7 +53,7 @@
                 }
             ],
             "description": "A PHP class that simplifies working with images",
-            "time": "2015-10-22 19:13:41"
+            "time": "2017-01-06T16:38:10+00:00"
         }
     ],
     "packages-dev": [],
@@ -63,6 +62,8 @@
     "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "ext-mbstring": "*"
+    },
     "platform-dev": []
 }
