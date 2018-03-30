@@ -1,2 +1,2 @@
 <?php 
-//mb_internal_encoding('utf8');
+mb_internal_encoding('utf8');
